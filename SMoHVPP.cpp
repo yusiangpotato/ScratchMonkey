@@ -82,25 +82,25 @@ enum {
     PORTB_SHIFT = 6
 };
 
-void
+inline void
 HVPPSetControlSignals(uint8_t signals)
 {
     SMoHWIF::HVPP::writeControl(signals);
 }
 
-void
+inline void
 HVPPSetDataMode(uint8_t mode)
 {
    SMoHWIF::HVPP::trisData(mode==INPUT);
 }
 
-void
+inline void
 HVPPSetDataBits(uint8_t dataOut)
 {
     SMoHWIF::HVPP::writeData(dataOut);
 }
 
-uint8_t
+inline uint8_t
 HVPPGetDataBits()
 {
     // No need for masking
