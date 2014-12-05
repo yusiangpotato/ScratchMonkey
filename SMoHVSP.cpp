@@ -13,6 +13,7 @@
 //
 
 #include "SMoHVSP.h"
+#include "SMoHWIF.h"
 #include "SMoCommand.h"
 #include "SMoGeneral.h"
 #include "SMoConfig.h"
@@ -23,23 +24,15 @@
 
 #include <Arduino.h>
 
-enum {
-    HVSP_VCC   = SMO_SVCC,
-    HVSP_RESET = SMO_HVRESET,
-    HVSP_SDI   =  8,
-    HVSP_SII   =  9,
-    HVSP_SDO   = 12,
-    HVSP_SCI   = 13,
-};
 
 inline bool
 HVSPBit(bool instrInBit, bool dataInBit)
 {
-    digitalWrite(HVSP_SII, instrInBit);
-    digitalWrite(HVSP_SDI, dataInBit);
-    digitalWrite(HVSP_SCI, HIGH);
-    digitalWrite(HVSP_SCI, LOW);
-    uint8_t dataOutBit = digitalRead(HVSP_SDO);
+    SMoHWIF::HVSP::writeSII(instrInBit);
+    SMoHWIF::HVSP::writeSDI(dataInBit);
+    SMoHWIF::HVSP::writeSCI(HIGH);
+    SMoHWIF::HVSP::writeSCI(LOW);
+    uint8_t dataOutBit = SMoHWIF::HVSP::readSDO();
 
     return dataOutBit;
 }
@@ -89,7 +82,7 @@ HVSPPollWait(uint8_t pollTimeout)
 {
     uint32_t target = millis()+pollTimeout;
     while (millis() != target)
-        if (digitalRead(HVSP_SDO)) 
+        if (SMoHWIF::HVSP::readSDO()) 
             return true;
     SMoCommand::SendResponse(STATUS_RDY_BSY_TOUT);
     return false;
@@ -111,30 +104,19 @@ SMoHVSP::EnterProgmode()
     const uint8_t   resetDelay1 = SMoCommand::gBody[7];
     const uint8_t   resetDelay2 = SMoCommand::gBody[8];
     
-    pinMode(HVSP_VCC, OUTPUT);
-    digitalWrite(HVSP_VCC, LOW);
-    digitalWrite(HVSP_RESET, HIGH); // Set BEFORE pinMode, so we don't glitch LOW
-    pinMode(HVSP_RESET, OUTPUT);
-    pinMode(HVSP_SCI, OUTPUT);
-    digitalWrite(HVSP_SCI, LOW);
-    pinMode(HVSP_SDI, OUTPUT);
-    digitalWrite(HVSP_SDI, LOW);
-    pinMode(HVSP_SII, OUTPUT);
-    digitalWrite(HVSP_SII, LOW);
-    pinMode(HVSP_SDO, OUTPUT);       // progEnable[2] on tinyX5
-    digitalWrite(HVSP_SDO, LOW);
+    SMoHWIF::HVSP::initPins();
 
     delay(powoffDelay);
-    digitalWrite(HVSP_VCC, HIGH);
+    SMoHWIF::HVSP::writeVCC(HIGH);
     delayMicroseconds(80);
     for (uint8_t i=0; i<syncCycles; ++i) {
-        digitalWrite(HVSP_SCI, HIGH);
+        SMoHWIF::HVSP::writeSCI(HIGH);
         delayMicroseconds(10);
-        digitalWrite(HVSP_SCI, LOW);
+        SMoHWIF::HVSP::writeSCI(LOW);
     }
-    digitalWrite(HVSP_RESET, LOW);
+    SMoHWIF::HVSP::writeReset(LOW);
     delayMicroseconds(1);
-    pinMode(HVSP_SDO, INPUT);
+    SMoHWIF::HVSP::trisSDO(true);
     
     SMoCommand::SendResponse();
 }
@@ -142,8 +124,8 @@ SMoHVSP::EnterProgmode()
 void
 SMoHVSP::LeaveProgmode()
 {
-    digitalWrite(HVSP_RESET, HIGH);
-    digitalWrite(HVSP_VCC, LOW);
+    SMoHWIF::HVSP::writeReset(HIGH);
+    SMoHWIF::HVSP::writeVCC(LOW);
 
     SMoCommand::SendResponse();
 }
