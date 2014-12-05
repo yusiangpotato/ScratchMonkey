@@ -50,7 +50,7 @@ static int currentSpeed    = 0;
 static uint8_t 
 SPITransfer(uint8_t out)
 {
-    SMoHWIF::ISP::transferSPI(out,currentSpeed);
+    return SMoHWIF::ISP::transferSPI(out,currentSpeed);
 }
 
 static uint8_t 
