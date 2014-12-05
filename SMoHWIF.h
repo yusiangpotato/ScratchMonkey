@@ -37,7 +37,7 @@ namespace SMoHWIF{
 	namespace ISP{
 		inline void 	initPins	();
 		inline void		cleanup		();
-		inline uint8_t  transferSPI (uint8_t data, int8_t speed);
+		inline uint8_t  transferSPI (uint8_t data, uint8_t speed);
 			//Based on speed given, decide to use HW SPI or bitbang.
 			//Speed is start from 0=fastest reccomended. Valid values for speed are 0-minSpeed() inclusive.
 		inline uint8_t  minSpeed();

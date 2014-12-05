@@ -13,8 +13,6 @@
 // Derived from Randall Bohn's ArduinoISP sketch
 //
 
-#include <SPI.h>
-
 #include "SMoISP.h"
 #include "SMoHWIF.h"
 #include "SMoGeneral.h"
@@ -27,18 +25,6 @@
 //
 // Pin definitions
 //
-enum {
-#if SMO_LAYOUT==SMO_LAYOUT_STANDARD
-    ISP_RESET       = SS,
-    MCU_CLOCK       = 9,    // OC1A    
-#elif SMO_LAYOUT==SMO_LAYOUT_LEONARDO
-    ISP_RESET       = 10,
-    MCU_CLOCK       = 9,    // OC1A
-#else
-    ISP_RESET       = SS,
-    MCU_CLOCK       = 11,   // OC1A
-#endif
-};
 
 //
 // If an MCU has been set to use the 125kHz internal oscillator, 
@@ -157,8 +143,6 @@ SMoISP::EnterProgmode()
     SMoDebugInit();
     SMoDebug.print("Pin layout ");
     SMoDebug.print(SMO_LAYOUT);
-    SMoDebug.print(" RESET ");
-    SMoDebug.println(ISP_RESET);
 #endif
     // const uint8_t   timeOut     =   SMoCommand::gBody[1];
     // const uint8_t   stabDelay   =   SMoCommand::gBody[2];

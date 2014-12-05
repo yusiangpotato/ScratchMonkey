@@ -147,23 +147,28 @@ namespace SMoHWIF{
 			if(usingHwSPI) SPI.end();
 
 		}
-		inline uint8_t  transferSPI (uint8_t data, int8_t speed){
+		inline uint8_t  transferSPI (uint8_t data, uint8_t speed){
 			//Based on speed given, decide to use HW SPI or bitbang.
 			//Speed is start from 0=fastest recommended
-			//Negative values give even faster.
 			//Speed=0-3 is HW SPI - 1MHz,500KHz,250KHz,125KHz. Corresponding to dividers.
 			//Speed=4-10 is SW SPI - ~62KHz, ~31K, ~16K, ~8K, ~4K,    ~2K, ~1KHz. Then we give up.
 			//				Period  	16us 32us  64us  128us 256us  512us  1ms
 			//	So quarter-period = 1<<(speed-2) microseconds.
-			
+			static const int clockDividers[4] = {
+				SPI_CLOCK_DIV16, //0 - 16MHz/16 = 1MHz
+				SPI_CLOCK_DIV32, //1
+				SPI_CLOCK_DIV64, //2
+				SPI_CLOCK_DIV128 //3 - 16MHz/128 = 125kHz
+			};
 			if(speed<4){
 				if(!usingHwSPI){
+					pinMode(SS,OUTPUT);
 					SPI.begin();
 					SPI.setDataMode(SPI_MODE0);
 					SPI.setBitOrder(MSBFIRST);
 					usingHwSPI=true;
 				}
-				SPI.setClockDivider(1<<(speed+4));
+				SPI.setClockDivider(clockDividers[speed]);
 				return SPI.transfer(data);
 			}else{
 				//SW SPI.
