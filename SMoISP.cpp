@@ -16,6 +16,7 @@
 #include <SPI.h>
 
 #include "SMoISP.h"
+#include "SMoHWIF.h"
 #include "SMoGeneral.h"
 #include "SMoCommand.h"
 #include "SMoConfig.h"
@@ -44,29 +45,12 @@ enum {
 // regular SPI speeds are much too fast, so we do a software 
 // emulation that's deliberately slow.
 //
-static int sSPILimpMode    = 0;
-const int kMaxLimp         = 8; // Slowest we'll try is 256µs, ~1kHz bit clock
+static int currentSpeed    = 0;
 
 static uint8_t 
 SPITransfer(uint8_t out)
 {
-    if (!sSPILimpMode)
-        return SPI.transfer(out); // Hardware SPI
-        
-    const int kQuarterCycle = 1<<sSPILimpMode; 
-    uint8_t in = 0;
-    for (int i=0; i<8; ++i) {
-        digitalWrite(MOSI, (out & 0x80) != 0);
-        out <<= 1;
-        delayMicroseconds(kQuarterCycle);
-        digitalWrite(SCK, HIGH);
-        delayMicroseconds(kQuarterCycle);
-        in = (in << 1) | digitalRead(MISO);
-        delayMicroseconds(kQuarterCycle);
-        digitalWrite(SCK, LOW);
-        delayMicroseconds(kQuarterCycle);        
-    }
-    return in;
+    SMoHWIF::ISP::transferSPI(out,currentSpeed);
 }
 
 static uint8_t 
@@ -125,7 +109,7 @@ SPITransaction(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)
 }
 
 static uint8_t
-SPITransaction(uint8_t b1, uint32_t address, uint8_t b4)
+SPITransaction(uint8_t b1, uint16_t address, uint8_t b4)
 {
     return SPITransaction(b1, (address >> 8) & 0xFF, address & 0xFF, b4);
 }
@@ -185,76 +169,43 @@ SMoISP::EnterProgmode()
     const uint8_t   pollIndex   =   SMoCommand::gBody[7];
     const uint8_t * command     =  &SMoCommand::gBody[8];
 
-    //
-    // Set up SPI
-    //
-    digitalWrite(MISO,      LOW);
-    pinMode(MISO,           INPUT);
-    pinMode(ISP_RESET,      OUTPUT);
-    SPI.begin();
-    SPI.setDataMode(SPI_MODE0);
-    SPI.setBitOrder(MSBFIRST);
-    SPI.setClockDivider(
-        SMoGeneral::gSCKDuration == 0 ? SPI_CLOCK_DIV8  :   // 2MHz
-       (SMoGeneral::gSCKDuration == 1 ? SPI_CLOCK_DIV32 :   // 500kHz  
-                                        SPI_CLOCK_DIV128)); // 125kHz (Default)
+    SMoHWIF::ISP::init();
 
-    //
-    // Set up clock generator on OC1A
-    //
-    pinMode(MCU_CLOCK, OUTPUT);
-    TCCR1A = _BV(COM1A0);              // CTC mode, toggle OC1A on comparison with OCR1A
-    OCR1A  = 0;                        // F(OC1A) = 16MHz / (2*8*(1+0) == 1MHz
-    TIMSK1 = 0;
-    TCCR1B = _BV(WGM12) | _BV(CS11);   // Prescale by 8
-    TCNT1  = 0;
-    
     //
     // Now reset the chip and issue the programming mode instruction
     //
-    digitalWrite(SCK, LOW);
+    //digitalWrite(SCK, LOW); //Why is this here anyway? IIRC it doesnt do anything when pin is switched to alt fn SPI, and anyway the SPI idles low.
     delay(50);
-    digitalWrite(ISP_RESET, LOW);
+    SMoHWIF::ISP::writeReset(LOW);
     delay(50);
-    uint8_t response = SPITransaction(command, pollIndex-1);
-    if (response != pollValue) {
-        //
-        // Ooops, that's bad. Try again in limp mode
-        //
-        SPI.end();
-        sSPILimpMode = 2;   // Start at 16µs, 60kHz bit clock
-        pinMode(MOSI, OUTPUT);
-        pinMode(SCK, OUTPUT);
-        pinMode(MISO, INPUT);
-        
-        do {
+    
+    
+    uint8_t response=0; 
+    currentSpeed=0; //Reset speed between invocations
+    do {
 #ifdef DEBUG_ISP
-            SMoDebug.print("Retrying in limp mode ");
-            SMoDebug.print(sSPILimpMode);
-            SMoDebug.print(" (");
-            SMoDebug.print(1000.0 / (4 << sSPILimpMode));
-            SMoDebug.println("kHz).");
+        SMoDebug.print("Trying speed No. ");
+        SMoDebug.println(currentSpeed);
 #endif
-            digitalWrite(ISP_RESET, HIGH);
-            digitalWrite(SCK, LOW);
-            delay(50);
-            digitalWrite(ISP_RESET, LOW);
-            delay(50);
-            response     = SPITransaction(command, pollIndex-1);
-        } while (response != pollValue && sSPILimpMode++ < kMaxLimp);
-    }
+        SMoHWIF::ISP::writeReset(HIGH);
+        //digitalWrite(SCK, LOW); //Ditto
+        delay(50);
+        SMoHWIF::ISP::writeReset(LOW);
+        delay(50);
+        response     = SPITransaction(command, pollIndex-1);
+#ifdef DEBUG_ISP
+        SMoDebug.print("Received ");
+        SMoDebug.println(response,HEX);
+#endif
+    } while (response != pollValue && ++currentSpeed <= SMoHWIF::ISP::minSpeed()); //Try speeds from 0(fastest) to the given maximum value(slowest)
     SMoCommand::SendResponse(response==pollValue ? STATUS_CMD_OK : STATUS_CMD_FAILED);
 }
 
 void
 SMoISP::LeaveProgmode()
 {
-    TCCR1B = 0;    // Stop clock generator
-    if (sSPILimpMode)
-        sSPILimpMode = false;
-    else 
-        SPI.end();     // Stop SPI
-    digitalWrite(ISP_RESET, HIGH);
+    SMoHWIF::ISP::cleanup();
+    SMoHWIF::ISP::writeReset(HIGH);
     SMoCommand::SendResponse();
 }
 

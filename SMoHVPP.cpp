@@ -69,18 +69,9 @@ enum {
 
 //
 // Control/Data access
-//
-#if SMO_LAYOUT==SMO_LAYOUT_STANDARD
-//
-// Delegate controls to auxiliary 74HC595 shift register, but
-// can transfer data pretty easily
-//
-enum {
-    PORTD_MASK = 0xFC,
-    PORTB_MASK = 0x03,
-    PORTD_SHIFT = 2,
-    PORTB_SHIFT = 6
-};
+// 
+// These are the low level functions that are aliased to the ones in SMoHWIF
+
 
 inline void
 HVPPSetControlSignals(uint8_t signals)
@@ -106,7 +97,6 @@ HVPPGetDataBits()
     // No need for masking
     return SMoHWIF::HVPP::readData();
 }
-#endif
 /*
 #elif SMO_LAYOUT==SMO_LAYOUT_LEONARDO
 //

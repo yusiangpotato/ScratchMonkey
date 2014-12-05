@@ -34,10 +34,22 @@ namespace SMoHWIF{
 		inline uint8_t	readRDY		();
 
 	}
+	namespace ISP{
+		inline void 	initPins	();
+		inline void		cleanup		();
+		inline uint8_t  transferSPI (uint8_t data, int8_t speed);
+			//Based on speed given, decide to use HW SPI or bitbang.
+			//Speed is start from 0=fastest reccomended. Valid values for speed are 0-minSpeed() inclusive.
+		inline uint8_t  minSpeed();
+			//Returns as slow as it can get. Larger is better, but make this too large and it will take forever.
+		inline void		writeReset(uint8_t state);
+	}
 }
 
 #if SMO_LAYOUT==SMO_LAYOUT_STANDARD
 	#include "SMoHWIF_Uno.h"
+#else
+	#error "Wait what halps too stronks i cannot >.<"
 #endif
 
 #endif //Include guard 
