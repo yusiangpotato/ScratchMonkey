@@ -347,8 +347,9 @@ SMoHVPP::EnterProgmode()
     delayMicroseconds(50);
     for (uint8_t i=0; i<latchCycles; ++i) {
         SMoHWIF::HVPP::writeXTAL(HIGH);
-        delayMicroseconds(10);
+        delayMicroseconds(5);
         SMoHWIF::HVPP::writeXTAL(LOW);
+        delayMicroseconds(5);
     }
     SMoHWIF::HVPP::writeReset(LOW);
     delay(resetDelay1);

@@ -182,6 +182,7 @@ SMoISP::EnterProgmode()
         SMoDebug.println(response,HEX);
 #endif
     } while (response != pollValue && ++currentSpeed <= SMoHWIF::ISP::minSpeed()); //Try speeds from 0(fastest) to the given maximum value(slowest)
+    //Once we have it working, the optimal speed is stored in variable currentSpeed, and is used for later communication attempts.
     SMoCommand::SendResponse(response==pollValue ? STATUS_CMD_OK : STATUS_CMD_FAILED);
 }
 
