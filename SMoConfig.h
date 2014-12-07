@@ -40,7 +40,7 @@
 //
 // Define to open a serial port for debugging
 //
-#define DEBUG_ISP
+#undef DEBUG_ISP
 #undef DEBUG_HVSP
 #undef DEBUG_HVPP
 
