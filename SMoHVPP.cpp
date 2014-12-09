@@ -25,17 +25,6 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-enum {
-    HVPP_RESET  = SMO_HVRESET,
-    HVPP_RDY    = 12,
-    HVPP_VCC    = SMO_SVCC,
-#if SMO_LAYOUT==SMO_LAYOUT_STANDARD
-    HVPP_RCLK   = A1,
-    HVPP_XTAL   = A2,
-#else
-    HVPP_XTAL   = 13
-#endif
-};
 
 //
 // HVPP, for 28 pins and more, requires 8 output signals and 1 input 

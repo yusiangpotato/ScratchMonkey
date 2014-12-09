@@ -1,8 +1,9 @@
 //SMoHWIF_Uno.h
 //Hardware Interface for Arduino UNO
 
-#ifndef _SMoHWIF_Uno_h_ //Include guard
-#define _SMoHWIF_Uno_h_
+
+#ifndef _SMoHWIF_ProMini_h_ //Include guard
+#define _SMoHWIF_ProMini_h_
 
 #define _SMoHWIF_defined_
 
@@ -19,10 +20,11 @@
 
 
 namespace SMoHWIF{
+	
 	namespace HVSP{
 		enum { //Variables/constants e.g. pins go here
-			HVSP_VCC   = SMO_SVCC,
-			HVSP_RESET = SMO_HVRESET,
+			HVSP_VCC   = A2,
+			HVSP_RESET = A3,
 			HVSP_SDI   =  8,
 			HVSP_SII   =  9,
 			HVSP_SDO   = 12,
@@ -55,35 +57,37 @@ namespace SMoHWIF{
     }
     namespace HVPP{
     	enum {
-    		HVPP_RESET  = SMO_HVRESET,
-    		HVPP_RDY    = 12,
-    		HVPP_VCC    = SMO_SVCC,
-    		HVPP_RCLK   = A1,
-    		HVPP_XTAL   = A2,
-
+    		HVPP_RESET  = A3,
+    		HVPP_VCC    = A2,
+    		HVPP_XTAL   = A1,
+    		//Below are constants for data bus. Data0:7 is from pins 2:9.
     		PORTD_MASK = 0xFC,
     		PORTB_MASK = 0x03,
     		PORTD_SHIFT = 2,
-    		PORTB_SHIFT = 6
+    		PORTB_SHIFT = 6,
+    		//Control bus is slightly different. Ctrl0 is A0, Ctrl2:3 is A4:A5, Ctrl4:7 is 10:13.
+    		//																	PB2:5 
+    		//Control4:7 is on a single port and can be manipulated using bit-shift.
+
+    		//We are using a unique configuration where A7 is used as a digital input - using the analog comparator!
     	};
 
 		inline void 	initPins(){ //Make CTRL pins output mode.
-			pinMode(HVPP_VCC, OUTPUT);
+			//We're using the analog comparator, here goes.
+    		ADMUX  = 0b11000111; //Select A7 as mux and enable the bandgap
+    		ADCSRA = 0b00000000; //Turn off adc completely
+    		ADCSRB = 0b01000000; //Turn on the mux
+    		ACSR   = 0b01000000; //Analog comp on, no interrupts.
+    		delay(5); //The bandgap need time to stabilize.
+
+			digitalWrite(HVPP_XTAL, LOW);
 			digitalWrite(HVPP_VCC, LOW);
     		digitalWrite(HVPP_RESET, HIGH); // Set BEFORE pinMode, so we don't glitch LOW
-    		pinMode(HVPP_RESET, OUTPUT);
-    		pinMode(HVPP_RDY, INPUT);
-    		digitalWrite(HVPP_RDY, LOW);
-    		pinMode(HVPP_XTAL, OUTPUT);
-    		digitalWrite(HVPP_XTAL, LOW);
+    		DDRC |= 0b00111111;
+    		DDRB = 0b11111111;
+    		
     		trisData(false);
-			//In this case we're using a 74'595 shift register for control, so set up SPI.
-    		SPI.begin();
-    		SPI.setDataMode(SPI_MODE0);
-    		SPI.setBitOrder(MSBFIRST);
-    		SPI.setClockDivider(SPI_CLOCK_DIV2);// 8MHz - Pedal to the metal
-    		digitalWrite(HVPP_RCLK, LOW);
-    		pinMode(HVPP_RCLK, OUTPUT);
+			
     	}
 
 		inline void		trisData	(bool state){//True=input, false=output
@@ -103,14 +107,23 @@ namespace SMoHWIF{
 			return (PINB << PORTB_SHIFT) | (PIND >> PORTD_SHIFT);
 		}
 		inline void 	writeControl(uint8_t ctl){
-			digitalWrite(HVPP_RCLK, LOW);
-			SPI.transfer(ctl);
-			digitalWrite(HVPP_RCLK, HIGH);
+			digitalWrite(A0,ctl&1);
+			ctl>>=2;
+			digitalWrite(A4,ctl&1);
+			ctl>>=1;
+			digitalWrite(A5,ctl&1);
+			
+			ctl<<=1;
+			ctl&=0b00111100;
+
+			PORTB = ( (PORTB & 0b11000011) | (ctl) );
 		}
 		inline void	   	writeReset	(uint8_t state){digitalWrite(HVPP_RESET,state);}
 		inline void    	writeVCC	(uint8_t state){digitalWrite(HVPP_VCC,state);}
 		inline void    	writeXTAL	(uint8_t state){digitalWrite(HVPP_XTAL,state);}
-		inline uint8_t	readRDY		(){return digitalRead(HVPP_RDY);}
+		inline uint8_t	readRDY		(){
+			return !((ACSR & _BV(ACO) ) >> 5 );
+		}
 
 	}
 	namespace ISP{
@@ -202,5 +215,6 @@ namespace SMoHWIF{
 			//Returns as slow as it can get. Larger is better, but make this too large and it will take forever.
 		inline void		writeReset(uint8_t state){digitalWrite(ISP_RESET,state);}
 	}
+	
 }
 #endif //Include guard

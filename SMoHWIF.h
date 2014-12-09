@@ -46,10 +46,12 @@ namespace SMoHWIF{
 	}
 }
 
-#if SMO_LAYOUT==SMO_LAYOUT_STANDARD
-	#include "SMoHWIF_Uno.h"
-#else
-	#error "Wait what halps too stronks i cannot >.<"
+
+//#include "SMoHWIF_Uno.h"
+//#include "SMoHWIF_ProMini.h"
+
+#if !defined (_SMoHWIF_defined_)
+	#error "You need to #include an appropriate interface file in SMoHWIF.H !"
 #endif
 
 #endif //Include guard 
