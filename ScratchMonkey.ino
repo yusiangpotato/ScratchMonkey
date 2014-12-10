@@ -22,7 +22,7 @@
 //
 
 #include <SPI.h>
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 
 #include "SMoCommand.h"
 #include "SMoGeneral.h"

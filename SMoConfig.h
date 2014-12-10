@@ -23,10 +23,10 @@
 //  - Mega:             SPI on pins 50-53, pins 0/1 used for Serial (ATmega1280/2560)
 //
 
-#define    SMO_LAYOUT_STANDARD     0
-#define    SMO_LAYOUT_LEONARDO     1
-#define    SMO_LAYOUT_MEGA         2
-
+// #define    SMO_LAYOUT_STANDARD     0
+// #define    SMO_LAYOUT_LEONARDO     1
+// #define    SMO_LAYOUT_MEGA         2
+/*
 #if defined(__AVR_ATmega32U4__)
 #define SMO_LAYOUT  SMO_LAYOUT_LEONARDO
 #elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -36,7 +36,7 @@
 #else
 #error Unknown Arduino platform, help me define the correct pin layout
 #endif
-
+*/
 //
 // Define to open a serial port for debugging
 //

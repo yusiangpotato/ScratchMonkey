@@ -4,6 +4,10 @@
 #ifndef _SMoHWIF_Uno_h_ //Include guard
 #define _SMoHWIF_Uno_h_
 
+
+#ifdef 	_SMoHWIF_defined_
+	#error "Pick one, and only one, SMoHWIF file..."
+#endif
 #define _SMoHWIF_defined_
 
 #include <stdint.h>
@@ -44,6 +48,9 @@ namespace SMoHWIF{
     		digitalWrite(HVSP_SDO, LOW);
     	}
 
+    	inline void 	cleanup(){
+			;
+    	}
 
     	inline void    	writeReset	(uint8_t state){digitalWrite(HVSP_RESET,state);}
     	inline void 	writeVCC	(uint8_t state){digitalWrite(HVSP_VCC,state);}
@@ -85,6 +92,11 @@ namespace SMoHWIF{
     		digitalWrite(HVPP_RCLK, LOW);
     		pinMode(HVPP_RCLK, OUTPUT);
     	}
+
+    	inline void 	cleanup(){
+			SPI.end();
+    	}
+
 
 		inline void		trisData	(bool state){//True=input, false=output
 			if (!state) {

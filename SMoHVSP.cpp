@@ -127,6 +127,8 @@ SMoHVSP::LeaveProgmode()
     SMoHWIF::HVSP::writeReset(HIGH);
     SMoHWIF::HVSP::writeVCC(LOW);
 
+    SMoHWIF::HVSP::cleanup();
+
     SMoCommand::SendResponse();
 }
 

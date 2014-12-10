@@ -4,7 +4,10 @@
 #include <Arduino.h>
 #include "SMoConfig.h"
 
-
+#ifdef 	_SMoHWIF_defined_
+	#error "Pick one, and only one, SMoHWIF file..."
+#endif
+#define _SMoHWIF_defined_
 
 //Dependencies
 #include <SPI.h>
@@ -15,12 +18,12 @@
 namespace SMoHWIF{
 	namespace HVSP{
 		enum { //Variables/constants e.g. pins go here
-			HVSP_VCC   = 11,
-			HVSP_RESET = 10,
-			HVSP_SDI   =  8,
-			HVSP_SII   =  9,
-			HVSP_SDO   = 12,
-			HVSP_SCI   = 13,
+			HVSP_VCC   = -1,
+			HVSP_RESET = -1,
+			HVSP_SDI   = -1,
+			HVSP_SII   = -1,
+			HVSP_SDO   = -1,
+			HVSP_SCI   = -1,
 		};
 
 		inline void    initPins(){
@@ -38,6 +41,11 @@ namespace SMoHWIF{
     		digitalWrite(HVSP_SDO, LOW);
     	}
 
+    	inline void 	cleanup(){
+			;
+    	}
+
+
 
     	inline void    	writeReset	(uint8_t state){digitalWrite(HVSP_RESET,state);}
     	inline void 	writeVCC	(uint8_t state){digitalWrite(HVSP_VCC,state);}
@@ -49,14 +57,14 @@ namespace SMoHWIF{
     }
     namespace HVPP{
     	enum {
-    		HVPP_RESET  = 10,
-    		HVPP_RDY    = 12,
-    		HVPP_VCC    = 11,
-    		HVPP_XTAL   = 13,
+    		HVPP_RESET  = -1,
+    		HVPP_RDY    = -1,
+    		HVPP_VCC    = -1,
+    		HVPP_XTAL   = -1,
     	};
     	//Define pins
-    	static const int dataPins[8]={2,3,4,5,6,7,8,9};
-    	static const int controlPins[8]={A5,-1,0,1,A3,A2,A1,A0}; //Set bit 1 as -1.
+    	static const int dataPins[8]={-1,-1,-1,-1,-1,-1,-1,-1};
+    	static const int controlPins[8]={-1,-1,-1,-1,-1,-1,-1,-1}; //Set bit 1 as -1.
 
 		inline void 	initPins(){ //Make CTRL pins output mode.
 			pinMode(HVPP_VCC, OUTPUT);
@@ -71,6 +79,10 @@ namespace SMoHWIF{
 			for(uint8_t i=7;i!=0xFF;i--){
 				pinMode(controlPins[i],state?INPUT:OUTPUT);
 			}
+    	}
+
+    	inline void 	cleanup(){
+			;
     	}
 
 		inline void		trisData	(bool state){//True=input, false=output
@@ -104,8 +116,8 @@ namespace SMoHWIF{
 	}
 	namespace ISP{
 		enum {
-    		ISP_RESET       = SS,
-    		MCU_CLOCK       = 9,    // OC1A    
+    		ISP_RESET       = -1,
+    		MCU_CLOCK       = -1,    // OC1A    
 		};
 		static bool usingHwSPI = false;
 

@@ -360,6 +360,8 @@ SMoHVPP::LeaveProgmode()
 
     delay(resetDelay);
 
+    SMoHWIF::HVPP::cleanup();
+
     SMoCommand::SendResponse();
 }
 

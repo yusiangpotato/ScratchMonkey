@@ -5,6 +5,9 @@
 #ifndef _SMoHWIF_ProMini_h_ //Include guard
 #define _SMoHWIF_ProMini_h_
 
+#ifdef 	_SMoHWIF_defined_
+	#error "Pick one, and only one, SMoHWIF file..."
+#endif
 #define _SMoHWIF_defined_
 
 #include <stdint.h>
@@ -44,6 +47,9 @@ namespace SMoHWIF{
     		digitalWrite(HVSP_SII, LOW);
     		pinMode(HVSP_SDO, OUTPUT);       // progEnable[2] on tinyX5
     		digitalWrite(HVSP_SDO, LOW);
+    	}
+    	inline void 	cleanup(){
+			;
     	}
 
 
@@ -89,6 +95,11 @@ namespace SMoHWIF{
     		trisData(false);
 			
     	}
+
+    	inline void 	cleanup(){
+			;
+    	}
+
 
 		inline void		trisData	(bool state){//True=input, false=output
 			if (!state) {

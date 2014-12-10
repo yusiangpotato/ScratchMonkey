@@ -9,9 +9,7 @@
 namespace SMoHWIF{
 	namespace HVSP{
 		inline void    initPins();
-			//Set VCC to Output, Low;
-			//Set RST to Output, High;
-			//Set SCI,SDI,SII,SDO to Output, Low.
+		inline void	   cleanup();
 		inline void    writeVCC	 (uint8_t state);
 		inline void    writeReset(uint8_t state);
 		inline void    writeSCI  (uint8_t state);
@@ -23,7 +21,7 @@ namespace SMoHWIF{
 	}
 	namespace HVPP{
 		inline void 	initPins();
-
+		inline void 	cleanup();
 		inline void		trisData	(bool state);
 		inline void		writeData	(uint8_t data);
 		inline uint8_t  readData	();
@@ -39,16 +37,24 @@ namespace SMoHWIF{
 		inline void		cleanup		();
 		inline uint8_t  transferSPI (uint8_t data, uint8_t speed);
 			//Based on speed given, decide to use HW SPI or bitbang.
-			//Speed is start from 0=fastest reccomended. Valid values for speed are 0-minSpeed() inclusive.
+			//Speed is start from 0=fastest reccomended. Valid values for speed are from 0 to minSpeed() inclusive.
 		inline uint8_t  minSpeed();
-			//Returns as slow as it can get. Larger is better, but make this too large and it will take forever.
+			//Returns as slow as it can get. More slower speeds (i.e. larger) is better, but make this too large and it will take forever.
 		inline void		writeReset(uint8_t state);
 	}
 }
 
 
+/*
+Target Specific Interface files.
+Uncomment one, and only one, of the following lines to select a hardware interface.
+Do ensure that it is suitable for your purposes!
+*/
+
 //#include "SMoHWIF_Uno.h"
-//#include "SMoHWIF_ProMini.h"
+#include "SMoHWIF_ProMini.h"
+
+
 
 #if !defined (_SMoHWIF_defined_)
 	#error "You need to #include an appropriate interface file in SMoHWIF.H !"
