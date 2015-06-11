@@ -18,28 +18,34 @@ Proceed with caution.
 No warranty is implied...
 
 The following data is the wiring plan for using a Arduino Pro Mini.
-----HVPP----
-D2:D9 - Data0:7
-A3 - HVReset, wire this to the gate of the mosfet used for pulling down the +12V.
-A2 - SVCC (Target Vcc)
-A1 - XTAL
-A0 - Ctrl0
-A4:A5 - Ctrl2:3
-D10:D13 - Ctrl4:7
-A7 - Ctrl1, AKA RDY. Used as an input only.
+
+HVPP|.
+----|----
+D2:D9 | Data0:7
+A3 | HVReset, wire this to the gate of the mosfet used for pulling down the +12V.
+A2 | SVCC (Target Vcc)
+A1 | XTAL
+A0 | Ctrl0
+A4:A5 | Ctrl2:3
+D10:D13 | Ctrl4:7
+A7 | Ctrl1, AKA RDY. Used as an input only.
 
 FYI, for wiring, Ctrl0:7={BS2,RDY,OE,WR,BS1,XA0,XA1,PAGEL}, as shown on the ATmega8 programming diagram.
-----HVSP----
-SDI - D8
-SII - D9
-SDO - 12
-SCI - 13
-SVCC - A2
-HVReset - A3
-----ISP----
-MOSI - 11
-MISO - 12
-SCK - 13
-RST - 10
-Connect Vcc together. 
+
+HVSP|.
+----|----
+SDI | D8
+SII | D9
+SDO | 12
+SCI | 13
+SVCC | A2
+HVReset | A3
+
+ISP|.
+----|----
+MOSI | 11
+MISO | 12
+SCK | 13
+RST | 10
+Connect the Vcc of host and target together. 
 A aux 1MHz clock is provided on pin 9 for chips that might have fuse bits wrongly set to use external clock or oscillator where none is present.
