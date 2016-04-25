@@ -51,11 +51,13 @@ Uncomment one, and only one, of the following lines to select a hardware interfa
 Do ensure that it is suitable for your purposes!
 */
 
-#include "SMoHWIF_Mabel.h"
+//#include "SMoHWIF_Mabel.h"
+//#include "SMoHWIF_ProMini.h"
+//#include "SMoHWIF_Uno.h"
 
 
 #if !defined (_SMoHWIF_defined_)
-#error "You need to #include an appropriate interface file in SMoHWIF.H !"
+#error "You need to #include an appropriate interface file in SMoHWIF.h !"
 #endif
 
 #endif //Include guard 
