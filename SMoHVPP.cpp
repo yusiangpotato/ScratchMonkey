@@ -27,70 +27,70 @@
 
 
 //
-// HVPP, for 28 pins and more, requires 8 output signals and 1 input 
+// HVPP, for 28 pins and more, requires 8 output signals and 1 input
 // signal. 20 pin MCUs multiplex some of the output signals, and they
 // don't do it all the same way. We rely on the control stack uploaded
-// by avrdude to tell us what signals to set, when. 
+// by avrdude to tell us what signals to set, when.
 //
-// This implementation uses a 74HC595 shift register for the output 
+// This implementation uses a 74HC595 shift register for the output
 // signal, but if you're using a board with more output pins, or are
-// willing to have the TX/RX pins do double duty, you may be able to 
+// willing to have the TX/RX pins do double duty, you may be able to
 // dispense with that.
 //
 // Control patterns, expressed as index values for the control stack
 // (Adopted from Simon Quiang's AVRminiProg implementation)
 //
 enum {
-    kLoadAddr       =  0,
-    kLoadData       =  4,
-    kLoadCommand    =  8,
-    kDone           = 12,
-    kCommitData     = 16,
-    kEnableRead     = 20,
-    kPageLoad       = 24,
-    kInit           = 28,
+  kLoadAddr       =  0,
+  kLoadData       =  4,
+  kLoadCommand    =  8,
+  kDone           = 12,
+  kCommitData     = 16,
+  kEnableRead     = 20,
+  kPageLoad       = 24,
+  kInit           = 28,
 
-    kLowByte        = 0,
-    kHighByte       = 1,
-    kExtByte        = 2,
-    kExt2Byte       = 3,
+  kLowByte        = 0,
+  kHighByte       = 1,
+  kExtByte        = 2,
+  kExt2Byte       = 3,
 };
 
 //
 // Control/Data access
-// 
+//
 // These are the low level functions that are aliased to the ones in SMoHWIF
 
 
 inline void
 HVPPSetControlSignals(uint8_t signals)
 {
-    SMoHWIF::HVPP::writeControl(signals);
+  SMoHWIF::HVPP::writeControl(signals);
 }
 
 inline void
 HVPPSetDataMode(uint8_t mode)
 {
-   SMoHWIF::HVPP::trisData(mode==INPUT);
+  SMoHWIF::HVPP::trisData(mode == INPUT);
 }
 
 inline void
 HVPPSetDataBits(uint8_t dataOut)
 {
-    SMoHWIF::HVPP::writeData(dataOut);
+  SMoHWIF::HVPP::writeData(dataOut);
 }
 
 inline uint8_t
 HVPPGetDataBits()
 {
-    // No need for masking
-    return SMoHWIF::HVPP::readData();
+  // No need for masking
+  return SMoHWIF::HVPP::readData();
 }
 /*
 #elif SMO_LAYOUT==SMO_LAYOUT_LEONARDO
 //
-// Leonardos don't have 8 contiguous pins anywhere, so we split the 
-// control signals across two ports. The data signals are not as 
+// Leonardos don't have 8 contiguous pins anywhere, so we split the
+// control signals across two ports. The data signals are not as
 // critical, so we just use digitalRead (we'd have to split them
 // across at least three ports).
 //
@@ -192,471 +192,471 @@ inline void
 HVPPSetControls(uint8_t controlIx)
 {
 #ifdef DEBUG_HVPP
-    SMoDebug.print("Ctrl ");
-    SMoDebug.print(controlIx, DEC);
-    SMoDebug.print(" / ");
-    SMoDebug.print(SMoGeneral::gControlStack[controlIx], BIN);
-    SMoDebug.println();
+  SMoDebug.print("Ctrl ");
+  SMoDebug.print(controlIx, DEC);
+  SMoDebug.print(" / ");
+  SMoDebug.print(SMoGeneral::gControlStack[controlIx], BIN);
+  SMoDebug.println();
 #endif
-    HVPPSetControlSignals(SMoGeneral::gControlStack[controlIx]);
+  HVPPSetControlSignals(SMoGeneral::gControlStack[controlIx]);
 }
 
 inline void
 HVPPSetControls(uint8_t controlIx, uint8_t byteSel)
 {
-    HVPPSetControls(controlIx+byteSel);
+  HVPPSetControls(controlIx + byteSel);
 }
 
 inline void
 HVPPDataMode(uint8_t mode)
 {
 #ifdef DEBUG_HVPP
-   SMoDebug.println(mode == OUTPUT ? "Data OUT" : "Data IN");
+  SMoDebug.println(mode == OUTPUT ? "Data OUT" : "Data IN");
 #endif
-   HVPPSetDataMode(mode);
+  HVPPSetDataMode(mode);
 }
 
 inline void
 HVPPSetDataRaw(uint8_t dataOut)
 {
 #ifdef DEBUG_HVPP
-   SMoDebug.print("Data<");
-   SMoDebug.println(dataOut, HEX);
+  SMoDebug.print("Data<");
+  SMoDebug.println(dataOut, HEX);
 #endif
-   HVPPSetDataBits(dataOut);
+  HVPPSetDataBits(dataOut);
 }
 
 inline uint8_t
 HVPPGetDataRaw()
 {
-    uint8_t dataIn = HVPPGetDataBits();
-    
+  uint8_t dataIn = HVPPGetDataBits();
+
 #ifdef DEBUG_HVPP
-    SMoDebug.print("Data>");
-    SMoDebug.println(dataIn, HEX);
+  SMoDebug.print("Data>");
+  SMoDebug.println(dataIn, HEX);
 #endif
 
-    return dataIn;
+  return dataIn;
 }
 
 inline void
 HVPPWriteData(uint8_t controlIx, uint8_t dataOut)
 {
-    HVPPSetControls(controlIx);
-    HVPPSetDataRaw(dataOut);
-    SMoHWIF::HVPP::writeXTAL(HIGH);
-    SMoHWIF::HVPP::writeXTAL(LOW);
+  HVPPSetControls(controlIx);
+  HVPPSetDataRaw(dataOut);
+  SMoHWIF::HVPP::writeXTAL(HIGH);
+  SMoHWIF::HVPP::writeXTAL(LOW);
 }
 
 inline void
 HVPPWriteData(uint8_t controlIx, uint8_t byteSel, uint8_t dataOut)
 {
-    HVPPSetControls(controlIx, byteSel);
-    HVPPSetDataRaw(dataOut);
-    SMoHWIF::HVPP::writeXTAL(HIGH);
-    SMoHWIF::HVPP::writeXTAL(LOW);
+  HVPPSetControls(controlIx, byteSel);
+  HVPPSetDataRaw(dataOut);
+  SMoHWIF::HVPP::writeXTAL(HIGH);
+  SMoHWIF::HVPP::writeXTAL(LOW);
 }
 
 inline void
 HVPPLoadCommand(uint8_t command)
 {
-    HVPPDataMode(OUTPUT);
-    HVPPWriteData(kLoadCommand, command);
+  HVPPDataMode(OUTPUT);
+  HVPPWriteData(kLoadCommand, command);
 }
 
 inline void
 HVPPLoadAddress(uint8_t byteSel, uint8_t addr)
 {
-    HVPPWriteData(kLoadAddr, byteSel, addr);
+  HVPPWriteData(kLoadAddr, byteSel, addr);
 }
 
 inline void
 HVPPLoadData(uint8_t byteSel, uint8_t addr)
 {
-    HVPPWriteData(kLoadData, byteSel, addr);
+  HVPPWriteData(kLoadData, byteSel, addr);
 }
 
 inline void
-HVPPCommitData(uint8_t byteSel=kLowByte)
+HVPPCommitData(uint8_t byteSel = kLowByte)
 {
-    HVPPSetControls(kDone, byteSel);
-    HVPPSetControls(kCommitData, byteSel);
-    HVPPSetControls(kDone, byteSel);
+  HVPPSetControls(kDone, byteSel);
+  HVPPSetControls(kCommitData, byteSel);
+  HVPPSetControls(kDone, byteSel);
 }
 
 inline void
-HVPPCommitDataWithPulseWidth(uint8_t pulseWidth, uint8_t byteSel=kLowByte)
+HVPPCommitDataWithPulseWidth(uint8_t pulseWidth, uint8_t byteSel = kLowByte)
 {
-    HVPPSetControls(kDone, byteSel);
-    HVPPSetControls(kCommitData, byteSel);
-    if (pulseWidth)
-        delay(pulseWidth);
-    HVPPSetControls(kDone, byteSel);
+  HVPPSetControls(kDone, byteSel);
+  HVPPSetControls(kCommitData, byteSel);
+  if (pulseWidth)
+    delay(pulseWidth);
+  HVPPSetControls(kDone, byteSel);
 }
 
 inline uint8_t
 HVPPReadData(uint8_t byteSel)
 {
-    HVPPSetControls(kLoadData, byteSel);
-    HVPPSetControls(kEnableRead, byteSel);
-    return HVPPGetDataRaw();
+  HVPPSetControls(kLoadData, byteSel);
+  HVPPSetControls(kEnableRead, byteSel);
+  return HVPPGetDataRaw();
 }
 
 static bool
 HVPPPollWait(uint8_t pollTimeout)
 {
-    uint32_t target = millis()+pollTimeout+5;
-    while (millis() != target)
-        if (SMoHWIF::HVPP::readRDY()) 
-            return true;
-    SMoCommand::SendResponse(STATUS_RDY_BSY_TOUT);
-    return false;
+  uint32_t target = millis() + pollTimeout + 5;
+  while (millis() != target)
+    if (SMoHWIF::HVPP::readRDY())
+      return true;
+  SMoCommand::SendResponse(STATUS_RDY_BSY_TOUT);
+  return false;
 }
 
 void
 SMoHVPP::EnterProgmode()
 {
 #ifdef DEBUG_HVPP
-    SMoDebugInit();
+  SMoDebugInit();
 #endif
 
-    // const uint8_t   stabDelay   = SMoCommand::gBody[1];
-    // const uint8_t   cmdexeDelay = SMoCommand::gBody[2];
-    const uint8_t   latchCycles = SMoCommand::gBody[3];
-    // const uint8_t   toggleVtg   = SMoCommand::gBody[4];
-    const uint8_t   powoffDelay = SMoCommand::gBody[5];
-    const uint8_t   resetDelay1 = SMoCommand::gBody[6];
-    const uint8_t   resetDelay2 = SMoCommand::gBody[7];
-    
-    SMoHWIF::HVPP::initPins();
-    HVPPSetControls(kInit);            // Set all control pins to zero
+  // const uint8_t   stabDelay   = SMoCommand::gBody[1];
+  // const uint8_t   cmdexeDelay = SMoCommand::gBody[2];
+  const uint8_t   latchCycles = SMoCommand::gBody[3];
+  // const uint8_t   toggleVtg   = SMoCommand::gBody[4];
+  const uint8_t   powoffDelay = SMoCommand::gBody[5];
+  const uint8_t   resetDelay1 = SMoCommand::gBody[6];
+  const uint8_t   resetDelay2 = SMoCommand::gBody[7];
 
-    delay(powoffDelay);
-    SMoHWIF::HVPP::writeVCC(HIGH);
-    delayMicroseconds(50);
-    for (uint8_t i=0; i<latchCycles; ++i) {
-        SMoHWIF::HVPP::writeXTAL(HIGH);
-        delayMicroseconds(5);
-        SMoHWIF::HVPP::writeXTAL(LOW);
-        delayMicroseconds(5);
-    }
-    SMoHWIF::HVPP::writeReset(LOW);
-    delay(resetDelay1);
-    delayMicroseconds(resetDelay2);
-    
-    SMoCommand::SendResponse();
-    
-    HVPPSetControls(kDone);
+  SMoHWIF::HVPP::initPins();
+  HVPPSetControls(kInit);            // Set all control pins to zero
+
+  delay(powoffDelay);
+  SMoHWIF::HVPP::writeVCC(HIGH);
+  delayMicroseconds(50);
+  for (uint8_t i = 0; i < latchCycles; ++i) {
+    SMoHWIF::HVPP::writeXTAL(HIGH);
+    delayMicroseconds(5);
+    SMoHWIF::HVPP::writeXTAL(LOW);
+    delayMicroseconds(5);
+  }
+  SMoHWIF::HVPP::writeReset(LOW);
+  delay(resetDelay1);
+  delayMicroseconds(resetDelay2);
+
+  SMoCommand::SendResponse();
+
+  HVPPSetControls(kDone);
 }
 
 void
 SMoHVPP::LeaveProgmode()
 {
-    // const uint8_t   stabDelay   = SMoCommand::gBody[1];
-    const uint8_t   resetDelay = SMoCommand::gBody[2];
+  // const uint8_t   stabDelay   = SMoCommand::gBody[1];
+  const uint8_t   resetDelay = SMoCommand::gBody[2];
 
-    SMoHWIF::HVPP::writeReset(HIGH);
-    SMoHWIF::HVPP::writeVCC(LOW);
+  SMoHWIF::HVPP::writeReset(HIGH);
+  SMoHWIF::HVPP::writeVCC(LOW);
 
-    delay(resetDelay);
+  delay(resetDelay);
 
-    SMoHWIF::HVPP::cleanup();
+  SMoHWIF::HVPP::cleanup();
 
-    SMoCommand::SendResponse();
+  SMoCommand::SendResponse();
 }
 
 void
 SMoHVPP::ChipErase()
 {
-    const uint8_t pulseWidth    = SMoCommand::gBody[1];
-    const uint8_t pollTimeout   = SMoCommand::gBody[2];
+  const uint8_t pulseWidth    = SMoCommand::gBody[1];
+  const uint8_t pollTimeout   = SMoCommand::gBody[2];
 
-    HVPPLoadCommand(0x80);
-    HVPPCommitDataWithPulseWidth(pulseWidth);
+  HVPPLoadCommand(0x80);
+  HVPPCommitDataWithPulseWidth(pulseWidth);
 
-    if (pollTimeout) {
-        if (!HVPPPollWait(pollTimeout))
-            return;
-    } 
+  if (pollTimeout) {
+    if (!HVPPPollWait(pollTimeout))
+      return;
+  }
 
-    SMoCommand::SendResponse();
+  SMoCommand::SendResponse();
 }
 
 void
 SMoHVPP::ProgramFlash()
 {
-    int16_t         numBytes    =  (SMoCommand::gBody[1] << 8) | SMoCommand::gBody[2];
-    const uint8_t   mode        =   SMoCommand::gBody[3];
-    const uint8_t   pollTimeout =   SMoCommand::gBody[4];
-    const uint8_t * data        =  &SMoCommand::gBody[5];
+  int16_t         numBytes    =  (SMoCommand::gBody[1] << 8) | SMoCommand::gBody[2];
+  const uint8_t   mode        =   SMoCommand::gBody[3];
+  const uint8_t   pollTimeout =   SMoCommand::gBody[4];
+  const uint8_t * data        =  &SMoCommand::gBody[5];
 
-    //
-    // Enter Flash Programming Mode
-    //
-    HVPPLoadCommand(0x10);
+  //
+  // Enter Flash Programming Mode
+  //
+  HVPPLoadCommand(0x10);
 
-    bool timeout = false;
-    if (mode & 1) { // Paged mode
-        uint32_t address = SMoGeneral::gAddress;
-        for (; numBytes > 0; numBytes -= 2) {
-            //
-            // Load Flash Page Buffer
-            //
-            HVPPLoadAddress(kLowByte, SMoGeneral::gAddress & 0xFF);
-            HVPPLoadData(kLowByte, *data++);
-            HVPPLoadData(kHighByte, *data++);
-            //
-            // Latch flash data
-            //
-            HVPPSetControls(kPageLoad, kHighByte);
-            HVPPSetControls(kDone, kHighByte);
+  bool timeout = false;
+  if (mode & 1) { // Paged mode
+    uint32_t address = SMoGeneral::gAddress;
+    for (; numBytes > 0; numBytes -= 2) {
+      //
+      // Load Flash Page Buffer
+      //
+      HVPPLoadAddress(kLowByte, SMoGeneral::gAddress & 0xFF);
+      HVPPLoadData(kLowByte, *data++);
+      HVPPLoadData(kHighByte, *data++);
+      //
+      // Latch flash data
+      //
+      HVPPSetControls(kPageLoad, kHighByte);
+      HVPPSetControls(kDone, kHighByte);
 
-            ++SMoGeneral::gAddress;
-        }
-        if (mode & 0x80) { // Write page to flash
-            //
-            // Load Flash High Address and Program Page
-            //
-            HVPPLoadAddress(kHighByte, (address >> 8) & 0xFF);
-            if (address & 0x80000000)
-                HVPPLoadAddress(kExtByte, (address >> 16) & 0xFF);
-            HVPPCommitData();
-
-            timeout = !HVPPPollWait(pollTimeout);
-        }
-    } else { 
-        //
-        // Are there any non-paged HVPP enabled MCUs left?
-        //
+      ++SMoGeneral::gAddress;
     }
+    if (mode & 0x80) { // Write page to flash
+      //
+      // Load Flash High Address and Program Page
+      //
+      HVPPLoadAddress(kHighByte, (address >> 8) & 0xFF);
+      if (address & 0x80000000)
+        HVPPLoadAddress(kExtByte, (address >> 16) & 0xFF);
+      HVPPCommitData();
+
+      timeout = !HVPPPollWait(pollTimeout);
+    }
+  } else {
     //
-    // Leave Flash Programming Mode
+    // Are there any non-paged HVPP enabled MCUs left?
     //
-    HVPPLoadCommand(0x00);
-    if (!timeout)
-        SMoCommand::SendResponse();
+  }
+  //
+  // Leave Flash Programming Mode
+  //
+  HVPPLoadCommand(0x00);
+  if (!timeout)
+    SMoCommand::SendResponse();
 }
 
 void
 SMoHVPP::ReadFlash()
 {
-    int16_t     numBytes    =  (SMoCommand::gBody[1] << 8) | SMoCommand::gBody[2];
-    uint8_t *   outData     =  &SMoCommand::gBody[2];
-    
+  int16_t     numBytes    =  (SMoCommand::gBody[1] << 8) | SMoCommand::gBody[2];
+  uint8_t *   outData     =  &SMoCommand::gBody[2];
+
+  //
+  // Flash Read
+  //
+  HVPPLoadCommand(0x02);
+  uint8_t prevPage = 0xFF;
+  for (; numBytes > 0; numBytes -= 2) {
     //
-    // Flash Read
+    // Read Flash Low and High Bytes
     //
-    HVPPLoadCommand(0x02);
-    uint8_t prevPage = 0xFF;
-    for (; numBytes>0; numBytes-=2) {
-        //
-        // Read Flash Low and High Bytes
-        //
-        uint8_t page = SMoGeneral::gAddress >> 8;
-        if (page != prevPage) {
-            if (SMoGeneral::gAddress & 0x80000000)
-                HVPPLoadAddress(kExtByte, (SMoGeneral::gAddress >> 16) & 0xFF);
-            HVPPLoadAddress(kHighByte, (SMoGeneral::gAddress >> 8) & 0xFF);
-            prevPage = page;
-        }
-        HVPPLoadAddress(kLowByte, SMoGeneral::gAddress & 0xFF);
-        HVPPDataMode(INPUT);
-        *outData++ = HVPPReadData(kLowByte);
-        *outData++ = HVPPReadData(kHighByte);
-        HVPPSetControls(kDone);
-        HVPPDataMode(OUTPUT);
-        ++SMoGeneral::gAddress;
+    uint8_t page = SMoGeneral::gAddress >> 8;
+    if (page != prevPage) {
+      if (SMoGeneral::gAddress & 0x80000000)
+        HVPPLoadAddress(kExtByte, (SMoGeneral::gAddress >> 16) & 0xFF);
+      HVPPLoadAddress(kHighByte, (SMoGeneral::gAddress >> 8) & 0xFF);
+      prevPage = page;
     }
-    *outData = STATUS_CMD_OK;
-    SMoCommand::SendResponse(STATUS_CMD_OK, outData-&SMoCommand::gBody[0]);
+    HVPPLoadAddress(kLowByte, SMoGeneral::gAddress & 0xFF);
+    HVPPDataMode(INPUT);
+    *outData++ = HVPPReadData(kLowByte);
+    *outData++ = HVPPReadData(kHighByte);
+    HVPPSetControls(kDone);
+    HVPPDataMode(OUTPUT);
+    ++SMoGeneral::gAddress;
+  }
+  *outData = STATUS_CMD_OK;
+  SMoCommand::SendResponse(STATUS_CMD_OK, outData - &SMoCommand::gBody[0]);
 }
 
 void
 SMoHVPP::ProgramEEPROM()
 {
-    int16_t         numBytes     =  (SMoCommand::gBody[1] << 8) | SMoCommand::gBody[2];
-    const uint8_t   mode        =   SMoCommand::gBody[3];
-    const uint8_t   pollTimeout =   SMoCommand::gBody[4];
-    const uint8_t * data        =  &SMoCommand::gBody[5];
+  int16_t         numBytes     =  (SMoCommand::gBody[1] << 8) | SMoCommand::gBody[2];
+  const uint8_t   mode        =   SMoCommand::gBody[3];
+  const uint8_t   pollTimeout =   SMoCommand::gBody[4];
+  const uint8_t * data        =  &SMoCommand::gBody[5];
 
-    //
-    // Enter EEPROM Programming Mode
-    //
-    HVPPLoadCommand(0x11);
-    bool timeout = false;
-    if (mode & 1) { // Paged mode
-        HVPPLoadAddress(kHighByte, (SMoGeneral::gAddress >> 8) & 0xFF);
-        for (; numBytes > 0; --numBytes) {
-            //
-            // Load EEPROM Page Buffer
-            //
-            HVPPLoadAddress(kLowByte, SMoGeneral::gAddress & 0xFF);
-            HVPPLoadData(kLowByte, *data++);
-            //
-            // Latch EEPROM
-            //
-            HVPPSetControls(kPageLoad, kLowByte);
-            HVPPSetControls(kDone, kLowByte);
-            ++SMoGeneral::gAddress;
-        }
-        if (mode & 0x80) { // Write page to EEPROM
-            //
-            // Load Program EEPROM Page
-            //
-            HVPPCommitData();
-
-            timeout = !HVPPPollWait(pollTimeout);
-        }
-    } else { 
-        //
-        // Are there any non-paged HVPP enabled MCUs left?
-        //
+  //
+  // Enter EEPROM Programming Mode
+  //
+  HVPPLoadCommand(0x11);
+  bool timeout = false;
+  if (mode & 1) { // Paged mode
+    HVPPLoadAddress(kHighByte, (SMoGeneral::gAddress >> 8) & 0xFF);
+    for (; numBytes > 0; --numBytes) {
+      //
+      // Load EEPROM Page Buffer
+      //
+      HVPPLoadAddress(kLowByte, SMoGeneral::gAddress & 0xFF);
+      HVPPLoadData(kLowByte, *data++);
+      //
+      // Latch EEPROM
+      //
+      HVPPSetControls(kPageLoad, kLowByte);
+      HVPPSetControls(kDone, kLowByte);
+      ++SMoGeneral::gAddress;
     }
+    if (mode & 0x80) { // Write page to EEPROM
+      //
+      // Load Program EEPROM Page
+      //
+      HVPPCommitData();
+
+      timeout = !HVPPPollWait(pollTimeout);
+    }
+  } else {
     //
-    // Leave EEPROM Programming Mode
+    // Are there any non-paged HVPP enabled MCUs left?
     //
-    HVPPLoadCommand(0x00);
-    if (!timeout)
-        SMoCommand::SendResponse();    
+  }
+  //
+  // Leave EEPROM Programming Mode
+  //
+  HVPPLoadCommand(0x00);
+  if (!timeout)
+    SMoCommand::SendResponse();
 }
 
 void
 SMoHVPP::ReadEEPROM()
 {
-    int16_t     numBytes    =  (SMoCommand::gBody[1] << 8) | SMoCommand::gBody[2];
-    uint8_t *   outData     =  &SMoCommand::gBody[2];
-    
+  int16_t     numBytes    =  (SMoCommand::gBody[1] << 8) | SMoCommand::gBody[2];
+  uint8_t *   outData     =  &SMoCommand::gBody[2];
+
+  //
+  // EEPROM Read
+  //
+  HVPPLoadCommand(0x03);
+  uint8_t prevPage = 0xFF;
+  for (; numBytes > 0; --numBytes) {
     //
-    // EEPROM Read
+    // Read EEPROM Byte
     //
-    HVPPLoadCommand(0x03);
-    uint8_t prevPage = 0xFF;
-    for (; numBytes>0; --numBytes) {
-        //
-        // Read EEPROM Byte
-        //
-        uint8_t page = SMoGeneral::gAddress >> 8;
-        if (page != prevPage) {
-            HVPPLoadAddress(kHighByte, (SMoGeneral::gAddress >> 8) & 0xFF);
-            prevPage = page;
-        }
-        HVPPLoadAddress(kLowByte, SMoGeneral::gAddress & 0xFF);
-        HVPPDataMode(INPUT);
-        *outData++ = HVPPReadData(kLowByte);
-        HVPPSetControls(kDone);
-        HVPPDataMode(OUTPUT);
-        ++SMoGeneral::gAddress;
+    uint8_t page = SMoGeneral::gAddress >> 8;
+    if (page != prevPage) {
+      HVPPLoadAddress(kHighByte, (SMoGeneral::gAddress >> 8) & 0xFF);
+      prevPage = page;
     }
-    *outData = STATUS_CMD_OK;
-    SMoCommand::SendResponse(STATUS_CMD_OK, outData-&SMoCommand::gBody[0]);
+    HVPPLoadAddress(kLowByte, SMoGeneral::gAddress & 0xFF);
+    HVPPDataMode(INPUT);
+    *outData++ = HVPPReadData(kLowByte);
+    HVPPSetControls(kDone);
+    HVPPDataMode(OUTPUT);
+    ++SMoGeneral::gAddress;
+  }
+  *outData = STATUS_CMD_OK;
+  SMoCommand::SendResponse(STATUS_CMD_OK, outData - &SMoCommand::gBody[0]);
 }
 
-static void 
+static void
 ProgramFuseLock(uint8_t command, uint8_t byteSel)
 {
-    const uint8_t   value       = SMoCommand::gBody[2];
-    const uint8_t   pulseWidth  = SMoCommand::gBody[3];
-    const uint8_t   pollTimeout = SMoCommand::gBody[4];
+  const uint8_t   value       = SMoCommand::gBody[2];
+  const uint8_t   pulseWidth  = SMoCommand::gBody[3];
+  const uint8_t   pollTimeout = SMoCommand::gBody[4];
 
-    HVPPLoadCommand(command);
-    HVPPLoadData(kLowByte, value);
-    HVPPCommitDataWithPulseWidth(pulseWidth, byteSel);
+  HVPPLoadCommand(command);
+  HVPPLoadData(kLowByte, value);
+  HVPPCommitDataWithPulseWidth(pulseWidth, byteSel);
 
-    if (HVPPPollWait(pollTimeout))
-        SMoCommand::SendResponse();
+  if (HVPPPollWait(pollTimeout))
+    SMoCommand::SendResponse();
 }
 
 static void
 ReadFuseLock(uint8_t byteSel)
 {
-    uint8_t * dataOut   = &SMoCommand::gBody[2];
+  uint8_t * dataOut   = &SMoCommand::gBody[2];
 
-    HVPPLoadCommand(0x04);
-    HVPPDataMode(INPUT);
-    *dataOut = HVPPReadData(byteSel);
-    HVPPSetControls(kDone);
-    HVPPDataMode(OUTPUT);
+  HVPPLoadCommand(0x04);
+  HVPPDataMode(INPUT);
+  *dataOut = HVPPReadData(byteSel);
+  HVPPSetControls(kDone);
+  HVPPDataMode(OUTPUT);
 
-    SMoCommand::SendResponse(STATUS_CMD_OK, 3);
+  SMoCommand::SendResponse(STATUS_CMD_OK, 3);
 }
 
 void
 SMoHVPP::ProgramFuse()
 {
-    const uint8_t   addr        = SMoCommand::gBody[1];
+  const uint8_t   addr        = SMoCommand::gBody[1];
 
-    ProgramFuseLock(0x40, addr);
+  ProgramFuseLock(0x40, addr);
 }
 
 void
 SMoHVPP::ReadFuse()
 {
-    const uint8_t   addr    = SMoCommand::gBody[1];
+  const uint8_t   addr    = SMoCommand::gBody[1];
 
-    ReadFuseLock(addr == 1 ? kExt2Byte : addr);
+  ReadFuseLock(addr == 1 ? kExt2Byte : addr);
 }
 
 void
-SMoHVPP::ProgramLock()   
+SMoHVPP::ProgramLock()
 {
-    ProgramFuseLock(0x20, kLowByte);
+  ProgramFuseLock(0x20, kLowByte);
 }
 
 void
-SMoHVPP::ReadLock()       
+SMoHVPP::ReadLock()
 {
-    ReadFuseLock(kHighByte);
+  ReadFuseLock(kHighByte);
 }
 
 static void
 ReadSignatureCal(uint8_t addr, uint8_t byteSel)
 {
-    uint8_t * dataOut   = &SMoCommand::gBody[2];
+  uint8_t * dataOut   = &SMoCommand::gBody[2];
 
-    HVPPLoadCommand(0x08);
-    HVPPLoadAddress(kLowByte, addr);
-    HVPPDataMode(INPUT);
-    *dataOut = HVPPReadData(byteSel);
-    HVPPSetControls(kDone);
-    HVPPDataMode(OUTPUT);
+  HVPPLoadCommand(0x08);
+  HVPPLoadAddress(kLowByte, addr);
+  HVPPDataMode(INPUT);
+  *dataOut = HVPPReadData(byteSel);
+  HVPPSetControls(kDone);
+  HVPPDataMode(OUTPUT);
 
-    SMoCommand::SendResponse(STATUS_CMD_OK, 3);
+  SMoCommand::SendResponse(STATUS_CMD_OK, 3);
 }
 
 void
-SMoHVPP::ReadSignature()  
+SMoHVPP::ReadSignature()
 {
-    const uint8_t   addr    = SMoCommand::gBody[1];
+  const uint8_t   addr    = SMoCommand::gBody[1];
 
-    ReadSignatureCal(addr, kLowByte);
+  ReadSignatureCal(addr, kLowByte);
 }
 
 void
-SMoHVPP::ReadOscCal()     
+SMoHVPP::ReadOscCal()
 {
-    ReadSignatureCal(0x00, kHighByte);
+  ReadSignatureCal(0x00, kHighByte);
 }
 
 //
 // LICENSE
 //
-// Redistribution and use in source and binary forms, with or without modification, 
+// Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
 //
-//  * Redistributions of source code must retain the above copyright notice, this 
+//  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
-//  * Redistributions in binary form must reproduce the above copyright notice, 
-//    this list of conditions and the following disclaimer in the documentation 
+//  * Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
 //    and/or other materials provided with the distribution.
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 // CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
