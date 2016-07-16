@@ -17,7 +17,6 @@
 
 
 namespace SMoHWIF {
-<<<<<<< HEAD
   inline void releasePins(){
     DDRB=0;
     PORTB=0;
@@ -27,8 +26,6 @@ namespace SMoHWIF {
     PORTC=0; //It's fine if we set all to 0
     
   }
-=======
->>>>>>> af45e4e2403ba7490cf0fc13266485c9fb58ac2c
   inline void trisLed1(uint8_t state){
     pinMode(10, state);  //PC5 = pin D10
   }
@@ -67,7 +64,6 @@ namespace SMoHWIF {
     }
     
     inline void 	cleanup() {
-<<<<<<< HEAD
       PORTB=0;
       DDRB=0;
       digitalWrite(HVSP_VCC, LOW);
@@ -75,9 +71,6 @@ namespace SMoHWIF {
       digitalWrite(HVSP_RESET, HIGH); 
       pinMode(HVSP_RESET, OUTPUT);
       digitalWrite(HVSP_RESET, HIGH);
-=======
-      ;
->>>>>>> af45e4e2403ba7490cf0fc13266485c9fb58ac2c
     }
     
     
@@ -127,7 +120,6 @@ namespace SMoHWIF {
     
     inline void cleanup() {
       DDRB = 0;
-<<<<<<< HEAD
       PORTB=0;
       DDRD = 0;
       PORTD = 0;
@@ -137,11 +129,6 @@ namespace SMoHWIF {
       digitalWrite(HVPP_RESET, HIGH);
       pinMode(HVPP_RDY, INPUT);
       pinMode(HVPP_XTAL, INPUT);
-=======
-      
-      DDRD = 0;
-      PORTD = 0;
->>>>>>> af45e4e2403ba7490cf0fc13266485c9fb58ac2c
     }
     
     inline void	trisData(bool state) { //True=input, false=output
@@ -206,14 +193,11 @@ namespace SMoHWIF {
     inline void		cleanup		() {
       TCCR1B = 0;//Stop Clock Gen
       if (usingHwSPI) SPI.end();
-<<<<<<< HEAD
+      usingHwSPI=false;
       pinMode(MISO, INPUT);
       pinMode(MOSI, INPUT);
       pinMode(SCK, INPUT);
       pinMode(ISP_RESET, INPUT);
-=======
-    
->>>>>>> af45e4e2403ba7490cf0fc13266485c9fb58ac2c
     }
     inline uint8_t  transferSPI (uint8_t data, uint8_t speed) {
       //Based on speed given, decide to use HW SPI or bitbang.

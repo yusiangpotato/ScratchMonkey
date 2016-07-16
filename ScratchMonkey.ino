@@ -35,10 +35,7 @@ void
 setup()
 {
   Serial.begin(115200);
-<<<<<<< HEAD
   SMoHWIF::releasePins();
-=======
->>>>>>> af45e4e2403ba7490cf0fc13266485c9fb58ac2c
   #ifdef _SMoHWIF_led1_
     SMoHWIF::trisLed1(OUTPUT);
   #endif
@@ -58,13 +55,8 @@ setup()
 void
 loop()
 {
-<<<<<<< HEAD
-  #ifdef _SMoHWIF_led1_ //After connected, LED1 is acting as !RX indicator
-    SMoHWIF::writeLed1(Serial.available()?LOW:HIGH); 
-=======
   #ifdef _SMoHWIF_led1_ //After connected to computer once, LED1 is steady except
     SMoHWIF::writeLed1(Serial.available()?LOW:HIGH); //when acting as !RX indicator
->>>>>>> af45e4e2403ba7490cf0fc13266485c9fb58ac2c
   #endif
   
   switch (SMoCommand::GetNextCommand()) {
